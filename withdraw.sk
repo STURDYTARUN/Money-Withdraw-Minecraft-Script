@@ -1,0 +1,52 @@
+command /withdraw <number>:
+    trigger:
+        if arg-1 <= 0:
+            send "&cAmount must be greater than 0!"
+            stop
+
+        if balance of player < arg-1:
+            send "&cYou don't have enough money!"
+            stop
+
+        remove arg-1 from balance of player
+
+        set {_id} to random integer between 100000 and 999999
+
+        set {_note} to paper named "&aMoney Note &7(₹%arg-1%)"
+
+        clear {_lore::*}
+        add "&7Right-click to redeem" to {_lore::*}
+        add "&8Value: %arg-1%" to {_lore::*}
+        add "&0ID:%{_id}%" to {_lore::*} # hidden unique ID
+
+        set lore of {_note} to {_lore::*}
+
+        give player {_note}
+
+        send "&aCreated money note of ₹%arg-1%!" to player
+
+
+on rightclick:
+    if event-item is paper:
+        if name of event-item contains "Money Note":
+
+            cancel event
+
+            set {_amount} to 0
+
+            loop lore of event-item:
+                if loop-value contains "Value:":
+                    set {_line} to loop-value
+                    replace all "Value: " with "" in {_line}
+                    replace all "&8" with "" in {_line}
+                    set {_amount} to {_line} parsed as number
+
+            if {_amount} <= 0:
+                send "&cInvalid note!" to player
+                stop
+
+            add {_amount} to balance of player
+
+            remove 1 of event-item from player's inventory
+
+            send "&aYou redeemed ₹%{_amount}%!" to player
